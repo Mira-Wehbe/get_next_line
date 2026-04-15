@@ -66,7 +66,7 @@ close(fd);
 - [cppreference - C memory](https://en.cppreference.com/w/c/memory) : malloc, free and memory management
 
 # Notes
-I used AI just to confirm how static variables behave between function calls, nothing more.
+I used AI just to confirm how static variables behave between function calls.
 
 ---
 
