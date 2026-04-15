@@ -2,59 +2,41 @@ This project has been created as part of the 42 curriculum by miwehbe.
 
 # get_next_line
 
-## Description
+`get_next_line` is a 42 project that does one thing: read a line from a file descriptor each time you call it.
+Call it once -> you get a line. Call it again -> next line. Keep going -> until it returns `NULL`.
 
-get_next_line is a 42 project that does one thing: read a line from a file descriptor every time you call it. Call it again, you get the next line. Call it until there's nothing left, and it returns NULL.
+Sounds easy. It's not.
 
-Simple concept. Not so simple to implement.
+The tricky part is not just reading from the file, but keeping what's left for the next call without using global variables. That's where static variables come in, and that's basically the whole point of the project.
+The function works with any file descriptor (files, stdin, etc.), and it has to behave correctly no matter the buffer size ,even if it's very small or very big.
 
-The real challenge here isn't just reading — it's remembering where you left off between calls without using global variables. That's where static variables come in, and honestly that's the whole point of this project. It's the first time at 42 you really have to think about state and memory in a different way.
+## How it works
 
-The function works on any file descriptor — regular files, standard input, whatever you throw at it. The buffer size is defined at compile time with `-D BUFFER_SIZE=n`, and your code has to handle any value, whether it's 1 or 10000000.
+The idea is to keep a "leftover" between calls.
 
----
+- There's a static variable that stores what was already read but not returned yet
+- Each time you call the function, it reads more from the file
+- It keeps reading until it finds a `\n` or reaches the end
+- It returns the line (including the newline if there is one)
+- And saves the rest for the next call
 
-## Algorithm
+If there's no newline at the end of the file, it just returns whatever is left.
 
-The approach is built around a static variable that acts as a leftover buffer — a place to store whatever was read beyond the newline character on the previous call.
+The important part is that the static variable keeps its value between calls, so the function doesn't start from zero every time.
 
-Here's how it works step by step:
-
-1. On each call, `get_next_line` checks if there's already a leftover from the previous read stored in the static variable.
-2. It keeps calling `read()` and appending to that buffer until it finds a `\n` or hits the end of the file.
-3. Once a newline is found, it extracts everything up to and including the `\n` as the line to return.
-4. Whatever comes after the `\n` gets saved back into the static variable for the next call.
-5. If the end of the file is reached with no newline, the remaining content is returned as the last line.
-
-The reason this works cleanly is because the static variable persists between function calls — it doesn't reset every time the function is called. That's the key insight of the whole project.
-
-No `lseek()`, no global variables, no libft allowed.
-
----
-
-## Instructions
-
-### Compilation
+## Compilation
 
 ```bash
 cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line.c get_next_line_utils.c -o gnl
 ```
 
-You can replace `42` with any buffer size you want to test with.
-
-The project must also compile without the flag:
+You can change the buffer size to test different cases. It should also compile without defining it:
 
 ```bash
 cc -Wall -Wextra -Werror get_next_line.c get_next_line_utils.c -o gnl
 ```
 
-### Files
-
-- `get_next_line.c` — the main function
-- `get_next_line_utils.c` — helper functions
-- `get_next_line.h` — header with the function prototype
-
-### Usage example
+## Example
 
 ```c
 int fd = open("file.txt", O_RDONLY);
@@ -67,18 +49,25 @@ while ((line = get_next_line(fd)) != NULL)
 }
 close(fd);
 ```
+> **Note:** you need to create `file.txt` manually before testing with a main
 
----
+## What was hard
+
+- Understanding how static variables actually behave
+- Handling memory without leaks
+- Managing the leftover correctly
+- Edge cases (empty file, no newline, small buffer, etc.)
 
 ## Resources
 
-- [man2 - read()](https://man7.org/linux/man-pages/man2/read.2.html) — understanding how read() works at a low level
-- [man2 - open()](https://man7.org/linux/man-pages/man2/open.2.html) — file descriptors and how to open files
-- [Static variables in C — GeeksforGeeks](https://www.geeksforgeeks.org/static-variables-in-c/) — good intro to static variables if you're new to the concept
-- [cppreference - C memory](https://en.cppreference.com/w/c/memory) — malloc, free and memory management
+- [man2 - read()](https://man7.org/linux/man-pages/man2/read.2.html) : understanding how read() works at a low level
+- [man2 - open()](https://man7.org/linux/man-pages/man2/open.2.html) : file descriptors and how to open files
+- [Static variables in C — GeeksforGeeks](https://www.geeksforgeeks.org/static-variables-in-c/) : good intro to static variables if you're new to the concept
+- [cppreference - C memory](https://en.cppreference.com/w/c/memory) : malloc, free and memory management
 
-**How AI was used:** AI was used to double check my understanding of how static variables behave across multiple function calls. No code was generated by AI.
+# Notes
+I used AI just to confirm how static variables behave between function calls, nothing more.
 
 ---
 
-"Static variable. One line at a time. How hard can it be?" — me, before starting this project.
+"Static variable. One line at a time. How hard can it be?" : me, before starting this project.
